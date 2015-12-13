@@ -17,7 +17,7 @@ except ImportError:
 from ..base import BaseEstimator, TransformerMixin
 from ..utils import check_array, as_float_array, check_random_state
 from ..utils.extmath import randomized_svd, safe_sparse_dot, svd_flip
-from ..utils.sparsefuncs import mean_variance_axis0
+from ..utils.sparsefuncs import mean_variance_axis
 
 __all__ = ["TruncatedSVD"]
 
@@ -38,6 +38,8 @@ class TruncatedSVD(BaseEstimator, TransformerMixin):
     a "naive" algorithm that uses ARPACK as an eigensolver on (X * X.T) or
     (X.T * X), whichever is more efficient.
 
+    Read more in the :ref:`User Guide <LSA>`.
+
     Parameters
     ----------
     n_components : int, default = 2
@@ -51,8 +53,10 @@ class TruncatedSVD(BaseEstimator, TransformerMixin):
         (scipy.sparse.linalg.svds), or "randomized" for the randomized
         algorithm due to Halko (2009).
 
-    n_iter : int, optional
+    n_iter : int, optional (default 5)
         Number of iterations for randomized SVD solver. Not used by ARPACK.
+        The default is larger than the default in `randomized_svd` to handle
+        sparse matrices that may have large slowly decaying spectrum.
 
     random_state : int or RandomState, optional
         (Seed for) pseudo-random number generator. If not given, the
@@ -64,12 +68,12 @@ class TruncatedSVD(BaseEstimator, TransformerMixin):
 
     Attributes
     ----------
-    `components_` : array, shape (n_components, n_features)
+    components_ : array, shape (n_components, n_features)
 
-    `explained_variance_ratio_` : array, [n_components]
+    explained_variance_ratio_ : array, [n_components]
         Percentage of variance explained by each of the selected components.
 
-    `explained_variance_` : array, [n_components]
+    explained_variance_ : array, [n_components]
         The variance of the training samples transformed by a projection to
         each component.
 
@@ -83,9 +87,9 @@ class TruncatedSVD(BaseEstimator, TransformerMixin):
     TruncatedSVD(algorithm='randomized', n_components=5, n_iter=5,
             random_state=42, tol=0.0)
     >>> print(svd.explained_variance_ratio_) # doctest: +ELLIPSIS
-    [ 0.07825... 0.05528... 0.05445... 0.04997... 0.04134...]
+    [ 0.0782... 0.0552... 0.0544... 0.0499... 0.0413...]
     >>> print(svd.explained_variance_ratio_.sum()) # doctest: +ELLIPSIS
-    0.27930...
+    0.279...
 
     See also
     --------
@@ -175,7 +179,7 @@ class TruncatedSVD(BaseEstimator, TransformerMixin):
         X_transformed = np.dot(U, np.diag(Sigma))
         self.explained_variance_ = exp_var = np.var(X_transformed, axis=0)
         if sp.issparse(X):
-            _, full_var = mean_variance_axis0(X)
+            _, full_var = mean_variance_axis(X, axis=0)
             full_var = full_var.sum()
         else:
             full_var = np.var(X, axis=0).sum()

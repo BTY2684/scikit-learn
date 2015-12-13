@@ -17,6 +17,8 @@ class Isomap(BaseEstimator, TransformerMixin):
 
     Non-linear dimensionality reduction through Isometric Mapping
 
+    Read more in the :ref:`User Guide <isomap>`.
+
     Parameters
     ----------
     n_neighbors : integer
@@ -27,11 +29,13 @@ class Isomap(BaseEstimator, TransformerMixin):
 
     eigen_solver : ['auto'|'arpack'|'dense']
         'auto' : Attempt to choose the most efficient solver
-            for the given problem.
+        for the given problem.
+
         'arpack' : Use Arnoldi decomposition to find the eigenvalues
-            and eigenvectors.
+        and eigenvectors.
+
         'dense' : Use a direct solver (i.e. LAPACK)
-            for the eigenvalue decomposition.
+        for the eigenvalue decomposition.
 
     tol : float
         Convergence tolerance passed to arpack or lobpcg.
@@ -43,9 +47,12 @@ class Isomap(BaseEstimator, TransformerMixin):
 
     path_method : string ['auto'|'FW'|'D']
         Method to use in finding shortest path.
-        'auto' : attempt to choose the best algorithm automatically
-        'FW' : Floyd-Warshall algorithm
-        'D' : Dijkstra algorithm with Fibonacci Heaps
+
+        'auto' : attempt to choose the best algorithm automatically.
+
+        'FW' : Floyd-Warshall algorithm.
+
+        'D' : Dijkstra's algorithm.
 
     neighbors_algorithm : string ['auto'|'brute'|'kd_tree'|'ball_tree']
         Algorithm to use for nearest neighbors search,
@@ -53,27 +60,27 @@ class Isomap(BaseEstimator, TransformerMixin):
 
     Attributes
     ----------
-    `embedding_` : array-like, shape (n_samples, n_components)
+    embedding_ : array-like, shape (n_samples, n_components)
         Stores the embedding vectors.
 
-    `kernel_pca_` : object
+    kernel_pca_ : object
         `KernelPCA` object used to implement the embedding.
 
-    `training_data_` : array-like, shape (n_samples, n_features)
+    training_data_ : array-like, shape (n_samples, n_features)
         Stores the training data.
 
-    `nbrs_` : sklearn.neighbors.NearestNeighbors instance
+    nbrs_ : sklearn.neighbors.NearestNeighbors instance
         Stores nearest neighbors instance, including BallTree or KDtree
         if applicable.
 
-    `dist_matrix_` : array-like, shape (n_samples, n_samples)
+    dist_matrix_ : array-like, shape (n_samples, n_samples)
         Stores the geodesic distance matrix of training data.
 
     References
     ----------
 
-    [1] Tenenbaum, J.B.; De Silva, V.; & Langford, J.C. A global geometric
-        framework for nonlinear dimensionality reduction. Science 290 (5500)
+    .. [1] Tenenbaum, J.B.; De Silva, V.; & Langford, J.C. A global geometric
+           framework for nonlinear dimensionality reduction. Science 290 (5500)
     """
 
     def __init__(self, n_neighbors=5, n_components=2, eigen_solver='auto',

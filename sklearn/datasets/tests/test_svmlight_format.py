@@ -72,7 +72,7 @@ def test_load_svmlight_file_fd():
 
 def test_load_svmlight_file_multilabel():
     X, y = load_svmlight_file(multifile, multilabel=True)
-    assert_equal(y, [(0, 1), (2,), (1, 2)])
+    assert_equal(y, [(0, 1), (2,), (), (1, 2)])
 
 
 def test_load_svmlight_files():
@@ -113,17 +113,25 @@ def test_load_compressed():
 
     with NamedTemporaryFile(prefix="sklearn-test", suffix=".gz") as tmp:
         tmp.close()  # necessary under windows
-        shutil.copyfileobj(open(datafile, "rb"), gzip.open(tmp.name, "wb"))
+        with open(datafile, "rb") as f:
+            shutil.copyfileobj(f, gzip.open(tmp.name, "wb"))
         Xgz, ygz = load_svmlight_file(tmp.name)
-        assert_array_equal(X.toarray(), Xgz.toarray())
-        assert_array_equal(y, ygz)
+        # because we "close" it manually and write to it,
+        # we need to remove it manually.
+        os.remove(tmp.name)
+    assert_array_equal(X.toarray(), Xgz.toarray())
+    assert_array_equal(y, ygz)
 
     with NamedTemporaryFile(prefix="sklearn-test", suffix=".bz2") as tmp:
         tmp.close()  # necessary under windows
-        shutil.copyfileobj(open(datafile, "rb"), BZ2File(tmp.name, "wb"))
+        with open(datafile, "rb") as f:
+            shutil.copyfileobj(f, BZ2File(tmp.name, "wb"))
         Xbz, ybz = load_svmlight_file(tmp.name)
-        assert_array_equal(X.toarray(), Xbz.toarray())
-        assert_array_equal(y, ybz)
+        # because we "close" it manually and write to it,
+        # we need to remove it manually.
+        os.remove(tmp.name)
+    assert_array_equal(X.toarray(), Xbz.toarray())
+    assert_array_equal(y, ybz)
 
 
 @raises(ValueError)
@@ -239,6 +247,20 @@ def test_dump():
                         # allow a rounding error at the last decimal place
                         Xd.astype(dtype), X2.toarray(), 15)
                 assert_array_equal(y, y2)
+
+
+def test_dump_multilabel():
+    X = [[1, 0, 3, 0, 5],
+         [0, 0, 0, 0, 0],
+         [0, 5, 0, 1, 0]]
+    y = [[0, 1, 0], [1, 0, 1], [1, 1, 0]]
+    f = BytesIO()
+    dump_svmlight_file(X, y, f, multilabel=True)
+    f.seek(0)
+    # make sure it dumps multilabel correctly
+    assert_equal(f.readline(), b("1 0:1 2:3 4:5\n"))
+    assert_equal(f.readline(), b("0,2 \n"))
+    assert_equal(f.readline(), b("0,1 1:5 3:1\n"))
 
 
 def test_dump_concise():

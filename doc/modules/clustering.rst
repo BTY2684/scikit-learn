@@ -4,7 +4,7 @@
 Clustering
 ==========
 
-`Clustering <http://en.wikipedia.org/wiki/Cluster_analysis>`__ of
+`Clustering <https://en.wikipedia.org/wiki/Cluster_analysis>`__ of
 unlabeled data can be performed with the module :mod:`sklearn.cluster`.
 
 Each clustering algorithm comes in two variants: a class, that implements
@@ -101,6 +101,12 @@ Overview of clustering methods
      - Flat geometry, good for density estimation
      - Mahalanobis distances to  centers
 
+   * - :ref:`Birch`
+     - branching factor, threshold, optional global clusterer.
+     - Large ``n_clusters`` and ``n_samples``
+     - Large dataset, outlier removal, data reduction.
+     - Euclidean distance between points
+
 Non-flat geometry clustering is useful when the clusters have a specific
 shape, i.e. a non-flat manifold, and the standard euclidean distance is
 not the right metric. This case arises in the two top rows of the figure
@@ -118,7 +124,7 @@ K-means
 
 The :class:`KMeans` algorithm clusters data by trying to separate samples
 in n groups of equal variance, minimizing a criterion known as the
-`inertia <inertia>` or within-cluster sum-of-squares.
+`inertia <inertia>`_ or within-cluster sum-of-squares.
 This algorithm requires the number of clusters to be specified.
 It scales well to large number of samples and has been used
 across a large range of application areas in many different fields.
@@ -146,9 +152,14 @@ It suffers from various drawbacks:
   better and zero is optimal. But in very high-dimensional spaces, Euclidean
   distances tend to become inflated
   (this is an instance of the so-called "curse of dimensionality").
-  Running a dimensionality reduction algorithm such as `PCA <PCA>`
+  Running a dimensionality reduction algorithm such as `PCA <PCA>`_
   prior to k-means clustering can alleviate this problem
   and speed up the computations.
+
+.. image:: ../auto_examples/cluster/images/plot_kmeans_assumptions_001.png
+   :target: ../auto_examples/cluster/plot_kmeans_assumptions.html
+   :align: center
+   :scale: 50
 
 K-means is often referred to as Lloyd's algorithm. In basic terms, the
 algorithm has three steps. The first step chooses the initial centroids, with
@@ -180,7 +191,7 @@ value. This is not the case in this implementation: iteration stops when
 centroids move less than the tolerance.
 
 Given enough time, K-means will always converge, however this may be to a local
-minimum. This is highly dependent on the the initialization of the centroids.
+minimum. This is highly dependent on the initialization of the centroids.
 As a result, the computation is often done several times, with different
 initializations of the centroids. One method to help address this issue is the
 k-means++ initialization scheme, which has been implemented in scikit-learn
@@ -197,8 +208,8 @@ each job).
 
 .. warning::
 
-    The parallel version of K-Means is broken on OS X when numpy uses the
-    Accelerate Framework. This is expected behavior: Accelerate can be called
+    The parallel version of K-Means is broken on OS X when `numpy` uses the
+    `Accelerate` Framework. This is expected behavior: `Accelerate` can be called
     after a fork but you need to execv the subprocess with the Python binary
     (which multiprocessing does not do under posix).
 
@@ -207,6 +218,8 @@ transform method of a trained model of :class:`KMeans`.
 
 .. topic:: Examples:
 
+ * :ref:`example_cluster_plot_kmeans_assumptions.py`: Demonstrating when
+   k-means performs intuitively and when it does not
  * :ref:`example_cluster_plot_kmeans_digits.py`: Clustering handwritten digits
 
 .. topic:: References:
@@ -310,6 +323,7 @@ appropriate for small to medium sized datasets.
  * :ref:`example_applications_plot_stock_market.py` Affinity Propagation on
    Financial time series to find groups of companies
 
+
 **Algorithm description:**
 The messages sent between points belong to one of two categories. The first is
 the responsibility :math:`r(i, k)`,
@@ -348,9 +362,8 @@ Mean Shift
 :class:`MeanShift` clustering aims to discover *blobs* in a smooth density of
 samples. It is a centroid based algorithm, which works by updating candidates
 for centroids to be the mean of the points within a given region. These
-candidates are then filtered in a
-post-processing stage to eliminate near-duplicates to form the final set of
-centroids.
+candidates are then filtered in a post-processing stage to eliminate
+near-duplicates to form the final set of centroids.
 
 Given a candidate centroid :math:`x_i` for iteration :math:`t`, the candidate
 is updated according to the following equation:
@@ -360,11 +373,10 @@ is updated according to the following equation:
     x_i^{t+1} = x_i^t + m(x_i^t)
 
 Where :math:`N(x_i)` is the neighborhood of samples within a given distance
-around :math:`x_i` and :math:`m` is the *mean shift* vector that is computed
-for each centroid that
-points towards a region of the maximum increase in the density of points. This
-is computed using the following equation, effectively updating a centroid to be
-the mean of the samples within its neighborhood:
+around :math:`x_i` and :math:`m` is the *mean shift* vector that is computed for each
+centroid that points towards a region of the maximum increase in the density of points.
+This is computed using the following equation, effectively updating a centroid
+to be the mean of the samples within its neighborhood:
 
 .. math::
 
@@ -399,7 +411,7 @@ given sample.
 
  * `"Mean shift: A robust approach toward feature space analysis."
    <http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.76.8968&rep=rep1&type=pdf>`_
-   D. Comaniciu, & P. Meer *IEEE Transactions on Pattern Analysis and Machine Intelligence* (2002)
+   D. Comaniciu and P. Meer, *IEEE Transactions on Pattern Analysis and Machine Intelligence* (2002)
 
 
 .. _spectral_clustering:
@@ -476,7 +488,7 @@ reproducible, but it tends to create parcels of fairly even and
 geometrical shape.
 
 =====================================  =====================================
- ``assign_labels="kmeans"`              ``assign_labels="discretize"``
+ ``assign_labels="kmeans"``              ``assign_labels="discretize"``
 =====================================  =====================================
 |lena_kmeans|                          |lena_discretize|
 =====================================  =====================================
@@ -511,7 +523,7 @@ build nested clusters by merging or splitting them successively. This
 hierarchy of clusters is represented as a tree (or dendrogram). The root of the
 tree is the unique cluster that gathers all the samples, the leaves being the
 clusters with only one sample. See the `Wikipedia page
-<http://en.wikipedia.org/wiki/Hierarchical_clustering>`_ for more details.
+<https://en.wikipedia.org/wiki/Hierarchical_clustering>`_ for more details.
 
 The :class:`AgglomerativeClustering` object performs a hierarchical clustering
 using a bottom up approach: each observation starts in its own cluster, and
@@ -767,6 +779,96 @@ by black points below.
    In Proceedings of the 2nd International Conference on Knowledge Discovery
    and Data Mining, Portland, OR, AAAI Press, pp. 226–231. 1996
 
+.. _birch:
+
+Birch
+=====
+
+The :class:`Birch` builds a tree called the Characteristic Feature Tree (CFT)
+for the given data. The data is essentially lossy compressed to a set of
+Characteristic Feature nodes (CF Nodes). The CF Nodes have a number of
+subclusters called Characteristic Feature subclusters (CF Subclusters)
+and these CF Subclusters located in the non-terminal CF Nodes
+can have CF Nodes as children.
+
+The CF Subclusters hold the necessary information for clustering which prevents
+the need to hold the entire input data in memory. This information includes:
+
+- Number of samples in a subcluster.
+- Linear Sum - A n-dimensional vector holding the sum of all samples
+- Squared Sum - Sum of the squared L2 norm of all samples.
+- Centroids - To avoid recalculation linear sum / n_samples.
+- Squared norm of the centroids.
+
+The Birch algorithm has two parameters, the threshold and the branching factor.
+The branching factor limits the number of subclusters in a node and the
+threshold limits the distance between the entering sample and the existing
+subclusters.
+
+This algorithm can be viewed as an instance or data reduction method,
+since it reduces the input data to a set of subclusters which are obtained directly
+from the leaves of the CFT. This reduced data can be further processed by feeding
+it into a global clusterer. This global clusterer can be set by ``n_clusters``.
+If ``n_clusters`` is set to None, the subclusters from the leaves are directly
+read off, otherwise a global clustering step labels these subclusters into global
+clusters (labels) and the samples are mapped to the global label of the nearest subcluster.
+
+**Algorithm description:**
+
+- A new sample is inserted into the root of the CF Tree which is a CF Node.
+  It is then merged with the subcluster of the root, that has the smallest
+  radius after merging, constrained by the threshold and branching factor conditions.
+  If the subcluster has any child node, then this is done repeatedly till it reaches
+  a leaf. After finding the nearest subcluster in the leaf, the properties of this
+  subcluster and the parent subclusters are recursively updated.
+
+- If the radius of the subcluster obtained by merging the new sample and the
+  nearest subcluster is greater than the square of the threshold and if the
+  number of subclusters is greater than the branching factor, then a space is temporarily
+  allocated to this new sample. The two farthest subclusters are taken and
+  the subclusters are divided into two groups on the basis of the distance
+  between these subclusters.
+
+- If this split node has a parent subcluster and there is room
+  for a new subcluster, then the parent is split into two. If there is no room,
+  then this node is again split into two and the process is continued
+  recursively, till it reaches the root.
+
+**Birch or MiniBatchKMeans?**
+
+ - Birch does not scale very well to high dimensional data. As a rule of thumb if
+   ``n_features`` is greater than twenty, it is generally better to use MiniBatchKMeans.
+ - If the number of instances of data needs to be reduced, or if one wants a
+   large number of subclusters either as a preprocessing step or otherwise,
+   Birch is more useful than MiniBatchKMeans.
+
+
+**How to use partial_fit?**
+
+To avoid the computation of global clustering, for every call of ``partial_fit``
+the user is advised
+
+ 1. To set ``n_clusters=None`` initially
+ 2. Train all data by multiple calls to partial_fit.
+ 3. Set ``n_clusters`` to a required value using
+    ``brc.set_params(n_clusters=n_clusters)``.
+ 4. Call ``partial_fit`` finally with no arguments, i.e ``brc.partial_fit()``
+    which performs the global clustering.
+
+.. image:: ../auto_examples/cluster/images/plot_birch_vs_minibatchkmeans_001.png
+    :target: ../auto_examples/cluster/plot_birch_vs_minibatchkmeans.html
+
+.. topic:: References:
+
+ * Tian Zhang, Raghu Ramakrishnan, Maron Livny
+   BIRCH: An efficient data clustering method for large databases.
+   http://www.cs.sfu.ca/CourseCentral/459/han/papers/zhang96.pdf
+
+ * Roberto Perdisci
+   JBirch - Java implementation of BIRCH clustering algorithm
+   https://code.google.com/p/jbirch/
+
+
 .. _clustering_evaluation:
 
 Clustering performance evaluation
@@ -783,12 +885,10 @@ classes according to some similarity metric.
 
 .. currentmodule:: sklearn.metrics
 
+.. _adjusted_rand_score:
 
 Adjusted Rand index
 -------------------
-
-Presentation and usage
-~~~~~~~~~~~~~~~~~~~~~~
 
 Given the knowledge of the ground truth class assignments ``labels_true``
 and our clustering algorithm assignments of the same samples
@@ -902,14 +1002,12 @@ random labelings by defining the adjusted Rand index as follows:
    L. Hubert and P. Arabie, Journal of Classification 1985
 
  * `Wikipedia entry for the adjusted Rand index
-   <http://en.wikipedia.org/wiki/Rand_index#Adjusted_Rand_index>`_
+   <https://en.wikipedia.org/wiki/Rand_index#Adjusted_Rand_index>`_
 
+.. _mutual_info_score:
 
 Mutual Information based scores
 -------------------------------
-
-Presentation and usage
-~~~~~~~~~~~~~~~~~~~~~~
 
 Given the knowledge of the ground truth class assignments ``labels_true`` and
 our clustering algorithm assignments of the same samples ``labels_pred``, the
@@ -1054,29 +1152,30 @@ calculated using a similar form to that of the adjusted Rand index:
 
  * Strehl, Alexander, and Joydeep Ghosh (2002). "Cluster ensembles – a
    knowledge reuse framework for combining multiple partitions". Journal of
-   Machine Learning Research 3: 583–617. doi:10.1162/153244303321897735
+   Machine Learning Research 3: 583–617.
+   `doi:10.1162/153244303321897735 <http://strehl.com/download/strehl-jmlr02.pdf>`_.
 
  * Vinh, Epps, and Bailey, (2009). "Information theoretic measures
    for clusterings comparison". Proceedings of the 26th Annual International
    Conference on Machine Learning - ICML '09.
-   doi:10.1145/1553374.1553511. ISBN 9781605585161.
+   `doi:10.1145/1553374.1553511 <http://dx.doi.org/10.1145/1553374.1553511>`_.
+   ISBN 9781605585161.
 
  * Vinh, Epps, and Bailey, (2010). Information Theoretic Measures for
    Clusterings Comparison: Variants, Properties, Normalization and
-   Correction for Chance}, JMLR
+   Correction for Chance, JMLR
    http://jmlr.csail.mit.edu/papers/volume11/vinh10a/vinh10a.pdf
 
  * `Wikipedia entry for the (normalized) Mutual Information
-   <http://en.wikipedia.org/wiki/Mutual_Information>`_
+   <https://en.wikipedia.org/wiki/Mutual_Information>`_
 
  * `Wikipedia entry for the Adjusted Mutual Information
-   <http://en.wikipedia.org/wiki/Adjusted_Mutual_Information>`_
+   <https://en.wikipedia.org/wiki/Adjusted_Mutual_Information>`_
+
+.. _homogeneity_completeness:
 
 Homogeneity, completeness and V-measure
 ---------------------------------------
-
-Presentation and usage
-~~~~~~~~~~~~~~~~~~~~~~
 
 Given the knowledge of the ground truth class assignments of the samples,
 it is possible to define some intuitive metric using conditional entropy
@@ -1142,7 +1241,7 @@ homogeneous but not complete::
 Advantages
 ~~~~~~~~~~
 
-- **Bounded scores**: 0.0 is as bad as it can be, 1.0 is a perfect score
+- **Bounded scores**: 0.0 is as bad as it can be, 1.0 is a perfect score.
 
 - Intuitive interpretation: clustering with bad V-measure can be
   **qualitatively analyzed in terms of homogeneity and completeness**
@@ -1221,7 +1320,7 @@ mean of homogeneity and completeness**:
 .. topic:: References
 
  .. [RH2007] `V-Measure: A conditional entropy-based external cluster evaluation
-   measure <http://acl.ldc.upenn.edu/D/D07/D07-1043.pdf>`_
+   measure <http://aclweb.org/anthology/D/D07/D07-1043.pdf>`_
    Andrew Rosenberg and Julia Hirschberg, 2007
 
  .. [B2011] `Identication and Characterization of Events in Social Media
@@ -1232,9 +1331,6 @@ mean of homogeneity and completeness**:
 
 Silhouette Coefficient
 ----------------------
-
-Presentation and usage
-~~~~~~~~~~~~~~~~~~~~~~
 
 If the ground truth labels are not known, evaluation must be performed using
 the model itself. The Silhouette Coefficient
@@ -1250,7 +1346,7 @@ of two scores:
 - **b**: The mean distance between a sample and all other points in the *next
   nearest cluster*.
 
-The Silhoeutte Coefficient *s* for a single sample is then given as:
+The Silhouette Coefficient *s* for a single sample is then given as:
 
 .. math:: s = \frac{b - a}{max(a, b)}
 
@@ -1280,7 +1376,8 @@ cluster analysis.
 
  * Peter J. Rousseeuw (1987). "Silhouettes: a Graphical Aid to the
    Interpretation and Validation of Cluster Analysis". Computational
-   and Applied Mathematics 20: 53–65. doi:10.1016/0377-0427(87)90125-7.
+   and Applied Mathematics 20: 53–65.
+   `doi:10.1016/0377-0427(87)90125-7 <http://dx.doi.org/10.1016/0377-0427(87)90125-7>`_.
 
 
 Advantages
@@ -1299,4 +1396,10 @@ Drawbacks
 - The Silhouette Coefficient is generally higher for convex clusters than other
   concepts of clusters, such as density based clusters like those obtained
   through DBSCAN.
+
+.. topic:: Examples:
+
+ * :ref:`example_cluster_plot_kmeans_silhouette_analysis.py` : In this example
+   the silhouette analysis is used to choose an optimal value for n_clusters.
+
 

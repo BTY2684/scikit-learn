@@ -10,8 +10,10 @@ from scipy import stats
 
 from ..base import BaseEstimator, TransformerMixin
 from ..utils import check_array
-from ..utils import as_float_array
 from ..utils.fixes import astype
+from ..utils.sparsefuncs import _get_median
+from ..utils.validation import check_is_fitted
+from ..utils.validation import FLOAT_DTYPES
 
 from ..externals import six
 
@@ -29,34 +31,6 @@ def _get_mask(X, value_to_mask):
         return np.isnan(X)
     else:
         return X == value_to_mask
-
-
-def _get_median(data, n_zeros):
-    """Compute the median of data with n_zeros additional zeros.
-
-    This function is used to support sparse matrices; it modifies data in-place
-    """
-    n_elems = len(data) + n_zeros
-    if not n_elems:
-        return np.nan
-    n_negative = np.count_nonzero(data < 0)
-    middle, is_odd = divmod(n_elems, 2)
-    data.sort()
-
-    if is_odd:
-        return _get_elem_at_rank(middle, data, n_negative, n_zeros)
-
-    return (_get_elem_at_rank(middle - 1, data, n_negative, n_zeros) +
-            _get_elem_at_rank(middle, data, n_negative, n_zeros)) / 2.
-
-
-def _get_elem_at_rank(rank, data, n_negative, n_zeros):
-    """Find the value in data augmented with n_zeros for the given rank"""
-    if rank < n_negative:
-        return data[rank]
-    if rank - n_negative < n_zeros:
-        return 0
-    return data[rank - n_zeros]
 
 
 def _most_frequent(array, extra_value, n_repeat):
@@ -89,6 +63,8 @@ def _most_frequent(array, extra_value, n_repeat):
 
 class Imputer(BaseEstimator, TransformerMixin):
     """Imputation transformer for completing missing values.
+
+    Read more in the :ref:`User Guide <imputation>`.
 
     Parameters
     ----------
@@ -128,7 +104,7 @@ class Imputer(BaseEstimator, TransformerMixin):
 
     Attributes
     ----------
-    `statistics_` : array of shape (n_features,)
+    statistics_ : array of shape (n_features,)
         The imputation fill value for each feature if axis == 0.
 
     Notes
@@ -331,15 +307,15 @@ class Imputer(BaseEstimator, TransformerMixin):
         X : {array-like, sparse matrix}, shape = [n_samples, n_features]
             The input data to complete.
         """
-        # Copy just once
-        X = as_float_array(X, copy=self.copy, force_all_finite=False)
+        if self.axis == 0:
+            check_is_fitted(self, 'statistics_')
 
         # Since two different arrays can be provided in fit(X) and
         # transform(X), the imputation data need to be recomputed
         # when the imputation is done per sample
         if self.axis == 1:
-            X = check_array(X, accept_sparse='csr', force_all_finite=False,
-                            copy=False)
+            X = check_array(X, accept_sparse='csr', dtype=FLOAT_DTYPES,
+                            force_all_finite=False, copy=self.copy)
 
             if sparse.issparse(X):
                 statistics = self._sparse_fit(X,
@@ -353,8 +329,8 @@ class Imputer(BaseEstimator, TransformerMixin):
                                              self.missing_values,
                                              self.axis)
         else:
-            X = check_array(X, accept_sparse='csc', force_all_finite=False,
-                            copy=False)
+            X = check_array(X, accept_sparse='csc', dtype=FLOAT_DTYPES,
+                            force_all_finite=False, copy=self.copy)
             statistics = self.statistics_
 
         # Delete the invalid rows/columns
@@ -379,7 +355,8 @@ class Imputer(BaseEstimator, TransformerMixin):
             indexes = np.repeat(np.arange(len(X.indptr) - 1, dtype=np.int),
                                 np.diff(X.indptr))[mask]
 
-            X.data[mask] = valid_statistics[indexes].astype(X.dtype)
+            X.data[mask] = astype(valid_statistics[indexes], X.dtype,
+                                  copy=False)
         else:
             if sparse.issparse(X):
                 X = X.toarray()

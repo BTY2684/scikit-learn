@@ -16,6 +16,7 @@ print(__doc__)
 from sklearn.svm import SVC
 from sklearn.datasets import load_digits
 from sklearn.feature_selection import RFE
+import matplotlib.pyplot as plt
 
 # Load the digits dataset
 digits = load_digits()
@@ -29,8 +30,7 @@ rfe.fit(X, y)
 ranking = rfe.ranking_.reshape(digits.images[0].shape)
 
 # Plot pixel ranking
-import matplotlib.pyplot as plt
-plt.matshow(ranking)
+plt.matshow(ranking, cmap=plt.cm.Blues)
 plt.colorbar()
 plt.title("Ranking of pixels with RFE")
 plt.show()

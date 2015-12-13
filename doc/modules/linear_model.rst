@@ -45,7 +45,7 @@ and will store the coefficients :math:`w` of the linear model in its
     >>> from sklearn import linear_model
     >>> clf = linear_model.LinearRegression()
     >>> clf.fit ([[0, 0], [1, 1], [2, 2]], [0, 1, 2])
-    LinearRegression(copy_X=True, fit_intercept=True, normalize=False)
+    LinearRegression(copy_X=True, fit_intercept=True, n_jobs=1, normalize=False)
     >>> clf.coef_
     array([ 0.5,  0.5])
 
@@ -104,7 +104,7 @@ its ``coef_`` member::
     >>> clf = linear_model.Ridge (alpha = .5)
     >>> clf.fit ([[0, 0], [0, 0], [1, 1]], [0, .1, 1]) # doctest: +NORMALIZE_WHITESPACE
     Ridge(alpha=0.5, copy_X=True, fit_intercept=True, max_iter=None,
-          normalize=False, solver='auto', tol=0.001)
+          normalize=False, random_state=None, solver='auto', tol=0.001)
     >>> clf.coef_
     array([ 0.34545455,  0.34545455])
     >>> clf.intercept_ #doctest: +ELLIPSIS
@@ -181,10 +181,11 @@ The implementation in the class :class:`Lasso` uses coordinate descent as
 the algorithm to fit the coefficients. See :ref:`least_angle_regression`
 for another implementation::
 
+    >>> from sklearn import linear_model
     >>> clf = linear_model.Lasso(alpha = 0.1)
     >>> clf.fit([[0, 0], [1, 1]], [0, 1])
     Lasso(alpha=0.1, copy_X=True, fit_intercept=True, max_iter=1000,
-       normalize=False, positive=False, precompute='auto', random_state=None,
+       normalize=False, positive=False, precompute=False, random_state=None,
        selection='cyclic', tol=0.0001, warm_start=False)
     >>> clf.predict([[1, 1]])
     array([ 0.8])
@@ -225,7 +226,7 @@ cross-validation: :class:`LassoCV` and :class:`LassoLarsCV`.
 explained below.
 
 For high-dimensional datasets with many collinear regressors,
-:class:`LassoCV` is most often preferable. How, :class:`LassoLarsCV` has
+:class:`LassoCV` is most often preferable. However, :class:`LassoLarsCV` has
 the advantage of exploring more relevant values of `alpha` parameter, and
 if the number of samples is very small compared to the number of
 observations, it is often faster than :class:`LassoCV`.
@@ -266,6 +267,59 @@ They also tend to break when the problem is badly conditioned
   * :ref:`example_linear_model_plot_lasso_model_selection.py`
 
 
+.. _multi_task_lasso:
+
+Multi-task Lasso
+================
+
+The :class:`MultiTaskLasso` is a linear model that estimates sparse
+coefficients for multiple regression problems jointly: ``y`` is a 2D array,
+of shape ``(n_samples, n_tasks)``. The constraint is that the selected
+features are the same for all the regression problems, also called tasks.
+
+The following figure compares the location of the non-zeros in W obtained
+with a simple Lasso or a MultiTaskLasso. The Lasso estimates yields
+scattered non-zeros while the non-zeros of the MultiTaskLasso are full
+columns.
+
+.. |multi_task_lasso_1| image:: ../auto_examples/linear_model/images/plot_multi_task_lasso_support_001.png
+    :target: ../auto_examples/linear_model/plot_multi_task_lasso_support.html
+    :scale: 48%
+
+.. |multi_task_lasso_2| image:: ../auto_examples/linear_model/images/plot_multi_task_lasso_support_002.png
+    :target: ../auto_examples/linear_model/plot_multi_task_lasso_support.html
+    :scale: 48%
+
+.. centered:: |multi_task_lasso_1| |multi_task_lasso_2|
+
+.. centered:: Fitting a time-series model, imposing that any active feature be active at all times.
+
+.. topic:: Examples:
+
+  * :ref:`example_linear_model_plot_multi_task_lasso_support.py`
+
+
+Mathematically, it consists of a linear model trained with a mixed
+:math:`\ell_1` :math:`\ell_2` prior as regularizer.
+The objective function to minimize is:
+
+.. math::  \underset{w}{min\,} { \frac{1}{2n_{samples}} ||X W - Y||_{Fro} ^ 2 + \alpha ||W||_{21}}
+
+where :math:`Fro` indicates the Frobenius norm:
+
+.. math:: ||A||_{Fro} = \sqrt{\sum_{ij} a_{ij}^2}
+
+and :math:`\ell_1` :math:`\ell_2` reads:
+
+.. math:: ||A||_{2 1} = \sum_i \sqrt{\sum_j a_{ij}^2}
+
+
+The implementation in the class :class:`MultiTaskLasso` uses coordinate descent as
+the algorithm to fit the coefficients.
+
+
+.. _elastic_net:
+
 Elastic Net
 ===========
 :class:`ElasticNet` is a linear regression model trained with L1 and L2 prior
@@ -303,52 +357,32 @@ The class :class:`ElasticNetCV` can be used to set the parameters
   * :ref:`example_linear_model_plot_lasso_coordinate_descent_path.py`
 
 
-.. _multi_task_lasso:
 
-Multi-task Lasso
-================
+.. _multi_task_elastic_net:
 
-The :class:`MultiTaskLasso` is a linear model that estimates sparse
-coefficients for multiple regression problems jointly: ``y`` is a 2D array,
-of shape (n_samples, n_tasks). The constraint is that the selected
+Multi-task Elastic Net
+======================
+
+The :class:`MultiTaskElasticNet` is an elastic-net model that estimates sparse
+coefficients for multiple regression problems jointly: ``Y`` is a 2D array,
+of shape ``(n_samples, n_tasks)``. The constraint is that the selected
 features are the same for all the regression problems, also called tasks.
 
-The following figure compares the location of the non-zeros in W obtained
-with a simple Lasso or a MultiTaskLasso. The Lasso estimates yields
-scattered non-zeros while the non-zeros of the MultiTaskLasso are full
-columns.
-
-.. |multi_task_lasso_1| image:: ../auto_examples/linear_model/images/plot_multi_task_lasso_support_001.png
-    :target: ../auto_examples/linear_model/plot_multi_task_lasso_support.html
-    :scale: 48%
-
-.. |multi_task_lasso_2| image:: ../auto_examples/linear_model/images/plot_multi_task_lasso_support_002.png
-    :target: ../auto_examples/linear_model/plot_multi_task_lasso_support.html
-    :scale: 48%
-
-.. centered:: |multi_task_lasso_1| |multi_task_lasso_2|
-
-.. centered:: Fitting a time-series model, imposing that any active feature be active at all times.
-
-.. topic:: Examples:
-
-  * :ref:`example_linear_model_plot_multi_task_lasso_support.py`
-
-
-
 Mathematically, it consists of a linear model trained with a mixed
-:math:`\ell_1` :math:`\ell_2` prior as regularizer.
+:math:`\ell_1` :math:`\ell_2` prior and :math:`\ell_2` prior as regularizer.
 The objective function to minimize is:
 
-.. math::  \underset{w}{min\,} { \frac{1}{2n_{samples}} ||X W - Y||_2 ^ 2 + \alpha ||W||_{21}}
+.. math::
 
-where;
+    \underset{W}{min\,} { \frac{1}{2n_{samples}} ||X W - Y||_{Fro}^2 + \alpha \rho ||W||_{2 1} +
+    \frac{\alpha(1-\rho)}{2} ||W||_{Fro}^2}
 
-.. math:: ||W||_{2 1} = \sum_i \sqrt{\sum_j w_{ij}^2}
-
-
-The implementation in the class :class:`MultiTaskLasso` uses coordinate descent as
+The implementation in the class :class:`MultiTaskElasticNet` uses coordinate descent as
 the algorithm to fit the coefficients.
+
+The class :class:`MultiTaskElasticNetCV` can be used to set the parameters
+``alpha`` (:math:`\alpha`) and ``l1_ratio`` (:math:`\rho`) by cross-validation.
+
 
 .. _least_angle_regression:
 
@@ -410,8 +444,8 @@ function of the norm of its coefficients.
    >>> clf = linear_model.LassoLars(alpha=.1)
    >>> clf.fit([[0, 0], [1, 1]], [0, 1])  # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
    LassoLars(alpha=0.1, copy_X=True, eps=..., fit_intercept=True,
-        fit_path=True, max_iter=500, normalize=True, precompute='auto',
-        verbose=False)
+        fit_path=True, max_iter=500, normalize=True, positive=False,
+        precompute='auto', verbose=False)
    >>> clf.coef_    # doctest: +ELLIPSIS
    array([ 0.717157...,  0.        ])
 
@@ -484,6 +518,9 @@ previously chosen dictionary elements.
  * `Matching pursuits with time-frequency dictionaries
    <http://blanche.polytechnique.fr/~mallat/papiers/MallatPursuit93.pdf>`_,
    S. G. Mallat, Z. Zhang,
+
+
+.. _bayesian_regression:
 
 Bayesian Regression
 ===================
@@ -646,39 +683,63 @@ Logistic regression
 
 Logistic regression, despite its name, is a linear model for classification
 rather than regression. Logistic regression is also known in the literature as
-logit regression, maximum-entropy classification (MaxEnt)
-or the log-linear classifier. In this model, the probabilities describing the possible outcomes of a single trial are modeled using a `logistic function <http://en.wikipedia.org/wiki/Logistic_function>`_.
+logit regression, maximum-entropy classification (MaxEnt) or the log-linear
+classifier. In this model, the probabilities describing the possible outcomes
+of a single trial are modeled using a `logistic function
+<http://en.wikipedia.org/wiki/Logistic_function>`_.
 
 The implementation of logistic regression in scikit-learn can be accessed from
-class :class:`LogisticRegression`. This
-implementation can fit a multiclass (one-vs-rest) logistic regression with optional
-L2 or L1 regularization.
+class :class:`LogisticRegression`. This implementation can fit binary, One-vs-
+Rest, or multinomial logistic regression with optional L2 or L1
+regularization.
 
-As an optimization problem, binary class L2 penalized logistic regression minimizes
-the following cost function:
+As an optimization problem, binary class L2 penalized logistic regression
+minimizes the following cost function:
 
 .. math:: \underset{w, c}{min\,} \frac{1}{2}w^T w + C \sum_{i=1}^n \log(\exp(- y_i (X_i^T w + c)) + 1) .
 
-Similarly, L1 regularized logistic regression solves the following optimization problem
+Similarly, L1 regularized logistic regression solves the following
+optimization problem
 
 .. math:: \underset{w, c}{min\,} \|w\|_1 + C \sum_{i=1}^n \log(\exp(- y_i (X_i^T w + c)) + 1) .
 
 The solvers implemented in the class :class:`LogisticRegression`
-are "liblinear" (which is a wrapper around the C++ library,
-LIBLINEAR), "newton-cg" and "lbfgs".
+are "liblinear", "newton-cg", "lbfgs" and "sag":
 
-The lbfgs and newton-cg solvers only support L2 penalization and are found
-to converge faster for some high dimensional data. L1 penalization yields
-sparse predicting weights.
+The solver "liblinear" uses a coordinate descent (CD) algorithm, and relies
+on the excellent C++ `LIBLINEAR library
+<http://www.csie.ntu.edu.tw/~cjlin/liblinear/>`_, which is shipped with
+scikit-learn. However, the CD algorithm implemented in liblinear cannot learn
+a true multinomial (multiclass) model; instead, the optimization problem is
+decomposed in a "one-vs-rest" fashion so separate binary classifiers are
+trained for all classes. This happens under the hood, so
+:class:`LogisticRegression` instances using this solver behave as multiclass
+classifiers. For L1 penalization :func:`sklearn.svm.l1_min_c` allows to
+calculate the lower bound for C in order to get a non "null" (all feature
+weights to zero) model.
 
-For L1 penalization :func:`sklearn.svm.l1_min_c` allows to calculate
-the lower bound for C in order to get a non "null" (all feature weights to
-zero) model.
+The "lbfgs", "sag" and "newton-cg" solvers only support L2 penalization and
+are found to converge faster for some high dimensional data. Setting
+`multi_class` to "multinomial" with these solvers learns a true multinomial
+logistic regression model [3]_, which means that its probability estimates
+should be better calibrated than the default "one-vs-rest" setting. The
+"lbfgs", "sag" and "newton-cg"" solvers cannot optimize L1-penalized models,
+therefore the "multinomial" setting does not learn sparse models.
 
-The implementation of Logistic Regression relies on the excellent
-`LIBLINEAR library <http://www.csie.ntu.edu.tw/~cjlin/liblinear/>`_,
-which is shipped with scikit-learn.
+The solver "sag" uses a Stochastic Average Gradient descent [4]_. It is faster
+than other solvers for large datasets, when both the number of samples and the
+number of features are large.
 
+In a nutshell, one may choose the solver with the following rules:
+
+=================================  =============================
+Case                               Solver
+=================================  =============================
+Small dataset or L1 penalty        "liblinear"
+Multinomial loss or large dataset  "lbfgs", "sag" or newton-cg"
+Very Large dataset                 "sag"
+=================================  =============================
+For large dataset, you may also consider using :class:`SGDClassifier` with 'log' loss.
 
 .. topic:: Examples:
 
@@ -686,18 +747,40 @@ which is shipped with scikit-learn.
 
   * :ref:`example_linear_model_plot_logistic_path.py`
 
+.. _liblinear_differences:
+
+.. topic:: Differences from liblinear:
+
+   There might be a difference in the scores obtained between
+   :class:`LogisticRegression` with ``solver=liblinear``
+   or :class:`LinearSVC` and the external liblinear library directly,
+   when ``fit_intercept=False`` and the fit ``coef_`` (or) the data to
+   be predicted are zeroes. This is because for the sample(s) with
+   ``decision_function`` zero, :class:`LogisticRegression` and :class:`LinearSVC`
+   predict the negative class, while liblinear predicts the positive class.
+   Note that a model with ``fit_intercept=False`` and having many samples with
+   ``decision_function`` zero, is likely to be a underfit, bad model and you are
+   advised to set ``fit_intercept=True`` and increase the intercept_scaling.
+
 .. note:: **Feature selection with sparse logistic regression**
 
    A logistic regression with L1 penalty yields sparse models, and can
    thus be used to perform feature selection, as detailed in
    :ref:`l1_feature_selection`.
 
-:class:`LogisticRegressionCV` implements Logistic Regression with
-builtin cross-validation to find out the optimal C parameter. In
-general the "newton-cg" and "lbfgs" solvers are found to be faster
-due to warm-starting. For the multiclass case, One-vs-All is used
-and an optimal C is obtained for each class.
+:class:`LogisticRegressionCV` implements Logistic Regression with builtin
+cross-validation to find out the optimal C parameter. "newton-cg", "sag" and
+"lbfgs" solvers are found to be faster for high-dimensional dense data, due to
+warm-starting. For the multiclass case, if `multi_class` option is set to
+"ovr", an optimal C is obtained for each class and if the `multi_class` option
+is set to "multinomial", an optimal C is obtained by minimizing the cross-
+entropy loss.
 
+.. topic:: References:
+
+    .. [3] Christopher M. Bishop: Pattern Recognition and Machine Learning, Chapter 4.3.4
+
+    .. [4] Mark Schmidt, Nicolas Le Roux, and Francis Bach: `Minimizing Finite Sums with the Stochastic Average Gradient. <http://hal.inria.fr/hal-00860051/PDF/sag_journal.pdf>`_
 
 Stochastic Gradient Descent - SGD
 =================================
@@ -717,6 +800,8 @@ while with ``loss="hinge"`` it fits a linear support vector machine (SVM).
 .. topic:: References
 
  * :ref:`sgd`
+
+.. _perceptron:
 
 Perceptron
 ==========
@@ -757,13 +842,90 @@ For classification, :class:`PassiveAggressiveClassifier` can be used with
    <http://jmlr.csail.mit.edu/papers/volume7/crammer06a/crammer06a.pdf>`_
    K. Crammer, O. Dekel, J. Keshat, S. Shalev-Shwartz, Y. Singer - JMLR 7 (2006)
 
-Robustness to outliers: RANSAC
-==============================
 
-RANSAC (RANdom SAmple Consensus) is an iterative algorithm for the robust
-estimation of parameters from a subset of inliers from the complete data set.
+Robustness regression: outliers and modeling errors
+=====================================================
 
-It is an iterative method to estimate the parameters of a mathematical model.
+Robust regression is interested in fitting a regression model in the
+presence of corrupt data: either outliers, or error in the model.
+
+.. figure:: ../auto_examples/linear_model/images/plot_theilsen_001.png
+   :target: ../auto_examples/linear_model/plot_theilsen.html
+   :scale: 50%
+   :align: center
+
+Different scenario and useful concepts
+----------------------------------------
+
+There are different things to keep in mind when dealing with data
+corrupted by outliers:
+
+.. |y_outliers| image:: ../auto_examples/linear_model/images/plot_robust_fit_003.png
+   :target: ../auto_examples/linear_model/plot_robust_fit.html
+   :scale: 60%
+
+.. |X_outliers| image:: ../auto_examples/linear_model/images/plot_robust_fit_002.png
+   :target: ../auto_examples/linear_model/plot_robust_fit.html
+   :scale: 60%
+
+.. |large_y_outliers| image:: ../auto_examples/linear_model/images/plot_robust_fit_005.png
+   :target: ../auto_examples/linear_model/plot_robust_fit.html
+   :scale: 60%
+
+* **Outliers in X or in y**?
+
+  ==================================== ====================================
+  Outliers in the y direction          Outliers in the X direction
+  ==================================== ====================================
+  |y_outliers|                         |X_outliers|
+  ==================================== ====================================
+
+* **Fraction of outliers versus amplitude of error**
+
+  The number of outlying points matters, but also how much they are
+  outliers.
+
+  ==================================== ====================================
+  Small outliers                       Large outliers
+  ==================================== ====================================
+  |y_outliers|                         |large_y_outliers|
+  ==================================== ====================================
+
+An important notion of robust fitting is that of breakdown point: the
+fraction of data that can be outlying for the fit to start missing the
+inlying data.
+
+Note that in general, robust fitting in high-dimensional setting (large
+`n_features`) is very hard. The robust models here will probably not work
+in these settings.
+
+
+.. topic:: **Trade-offs: which estimator?**
+
+   Scikit-learn provides 2 robust regression estimators:
+   :ref:`RANSAC <ransac_regression>` and
+   :ref:`Theil Sen <theil_sen_regression>`
+
+   * :ref:`RANSAC <ransac_regression>` is faster, and scales much better
+     with the number of samples
+
+   * :ref:`RANSAC <ransac_regression>` will deal better with large
+     outliers in the y direction (most common situation)
+
+  * :ref:`Theil Sen <theil_sen_regression>` will cope better with
+    medium-size outliers in the X direction, but this property will
+    disappear in large dimensional settings.
+
+ When in doubt, use :ref:`RANSAC <ransac_regression>`
+
+.. _ransac_regression:
+
+RANSAC: RANdom SAmple Consensus
+--------------------------------
+
+RANSAC (RANdom SAmple Consensus) fits a model from random subsets of
+inliers from the complete data set.
+
 RANSAC is a non-deterministic algorithm producing only a reasonable result with
 a certain probability, which is dependent on the number of iterations (see
 `max_trials` parameter). It is typically used for linear and non-linear
@@ -779,6 +941,9 @@ estimated only from the determined inliers.
    :target: ../auto_examples/linear_model/plot_ransac.html
    :align: center
    :scale: 50%
+
+Details of the algorithm
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Each iteration performs the following steps:
 
@@ -809,6 +974,7 @@ performance.
 .. topic:: Examples:
 
   * :ref:`example_linear_model_plot_ransac.py`
+  * :ref:`example_linear_model_plot_robust_fit.py`
 
 .. topic:: References:
 
@@ -821,6 +987,68 @@ performance.
    <http://www.bmva.org/bmvc/2009/Papers/Paper355/Paper355.pdf>`_
    Sunglok Choi, Taemin Kim and Wonpil Yu - BMVC (2009)
 
+.. _theil_sen_regression:
+
+Theil-Sen estimator: generalized-median-based estimator
+--------------------------------------------------------
+
+The :class:`TheilSenRegressor` estimator uses a generalization of the median in
+multiple dimensions. It is thus robust to multivariate outliers. Note however
+that the robustness of the estimator decreases quickly with the dimensionality
+of the problem. It looses its robustness properties and becomes no
+better than an ordinary least squares in high dimension.
+
+.. topic:: Examples:
+
+  * :ref:`example_linear_model_plot_theilsen.py`
+  * :ref:`example_linear_model_plot_robust_fit.py`
+
+.. topic:: References:
+
+ * http://en.wikipedia.org/wiki/Theil%E2%80%93Sen_estimator
+
+Theoretical considerations
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:class:`TheilSenRegressor` is comparable to the :ref:`Ordinary Least Squares
+(OLS) <ordinary_least_squares>` in terms of asymptotic efficiency and as an
+unbiased estimator. In contrast to OLS, Theil-Sen is a non-parametric
+method which means it makes no assumption about the underlying
+distribution of the data. Since Theil-Sen is a median-based estimator, it
+is more robust against corrupted data aka outliers. In univariate
+setting, Theil-Sen has a breakdown point of about 29.3% in case of a
+simple linear regression which means that it can tolerate arbitrary
+corrupted data of up to 29.3%.
+
+.. figure:: ../auto_examples/linear_model/images/plot_theilsen_001.png
+   :target: ../auto_examples/linear_model/plot_theilsen.html
+   :align: center
+   :scale: 50%
+
+The implementation of :class:`TheilSenRegressor` in scikit-learn follows a
+generalization to a multivariate linear regression model [#f1]_ using the
+spatial median which is a generalization of the median to multiple
+dimensions [#f2]_.
+
+In terms of time and space complexity, Theil-Sen scales according to
+
+.. math::
+    \binom{n_{samples}}{n_{subsamples}}
+
+which makes it infeasible to be applied exhaustively to problems with a
+large number of samples and features. Therefore, the magnitude of a
+subpopulation can be chosen to limit the time and space complexity by
+considering only a random subset of all possible combinations.
+
+.. topic:: Examples:
+
+  * :ref:`example_linear_model_plot_theilsen.py`
+
+.. topic:: References:
+
+    .. [#f1] Xin Dang, Hanxiang Peng, Xueqin Wang and Heping Zhang: `Theil-Sen Estimators in a Multiple Linear Regression Model. <http://www.math.iupui.edu/~hpeng/MTSE_0908.pdf>`_
+
+    .. [#f2] T. Kärkkäinen and S. Äyrämö: `On Computation of Spatial Median for Robust Data Mining. <http://users.jyu.fi/~samiayr/pdf/ayramo_eurogen05.pdf>`_
 
 .. _polynomial_regression:
 
@@ -882,9 +1110,9 @@ of a given degree.  It can be used as follows::
            [4, 5]])
     >>> poly = PolynomialFeatures(degree=2)
     >>> poly.fit_transform(X)
-    array([[ 1,  0,  1,  0,  0,  1],
-           [ 1,  2,  3,  4,  6,  9],
-           [ 1,  4,  5, 16, 20, 25]])
+    array([[  1.,   0.,   1.,   0.,   0.,   1.],
+           [  1.,   2.,   3.,   4.,   6.,   9.],
+           [  1.,   4.,   5.,  16.,  20.,  25.]])
 
 The features of ``X`` have been transformed from :math:`[x_1, x_2]` to
 :math:`[1, x_1, x_2, x_1^2, x_1 x_2, x_2^2]`, and can now be used within
@@ -897,6 +1125,7 @@ polynomial regression can be created and used as follows::
     >>> from sklearn.preprocessing import PolynomialFeatures
     >>> from sklearn.linear_model import LinearRegression
     >>> from sklearn.pipeline import Pipeline
+    >>> import numpy as np
     >>> model = Pipeline([('poly', PolynomialFeatures(degree=3)),
     ...                   ('linear', LinearRegression(fit_intercept=False))])
     >>> # fit to an order-3 polynomial data
@@ -922,14 +1151,18 @@ This way, we can solve the XOR problem with a linear classifier::
 
     >>> from sklearn.linear_model import Perceptron
     >>> from sklearn.preprocessing import PolynomialFeatures
+    >>> import numpy as np
     >>> X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     >>> y = X[:, 0] ^ X[:, 1]
     >>> X = PolynomialFeatures(interaction_only=True).fit_transform(X)
     >>> X
-    array([[1, 0, 0, 0],
-           [1, 0, 1, 0],
-           [1, 1, 0, 0],
-           [1, 1, 1, 1]])
-    >>> clf = Perceptron(fit_intercept=False, n_iter=10).fit(X, y)
+    array([[ 1.,  0.,  0.,  0.],
+           [ 1.,  0.,  1.,  0.],
+           [ 1.,  1.,  0.,  0.],
+           [ 1.,  1.,  1.,  1.]])
+    >>> clf = Perceptron(fit_intercept=False, n_iter=10, shuffle=False).fit(X, y)
     >>> clf.score(X, y)
     1.0
+
+
+
